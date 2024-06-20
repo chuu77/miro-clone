@@ -16,7 +16,6 @@ import type {
 } from "convex/server";
 import type * as board from "../board.js";
 import type * as boards from "../boards.js";
-import type * as store_use_rename_modal from "../store/use-rename-modal.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -29,7 +28,6 @@ import type * as store_use_rename_modal from "../store/use-rename-modal.js";
 declare const fullApi: ApiFromModules<{
   board: typeof board;
   boards: typeof boards;
-  "store/use-rename-modal": typeof store_use_rename_modal;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

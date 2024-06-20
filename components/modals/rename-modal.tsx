@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '../ui/dialog';
-import { useRenameModal } from '@/convex/store/use-rename-modal';
+import { useRenameModal } from '@/store/use-rename-modal';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { useApiMutation } from '@/hooks/use-api-mutation';
