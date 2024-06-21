@@ -19,6 +19,7 @@ export async function POST(request: Request) {
   if (!authorization || !user) {
     return new Response('Unauthorized', { status: 403 });
   }
+  // can comment out if trouble inviting
 
   const { room } = await request.json();
   const board = await convex.query(api.board.get, {
