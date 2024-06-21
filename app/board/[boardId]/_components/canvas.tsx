@@ -9,21 +9,31 @@ import {
   useCanUndo,
   useCanRedo,
   useMutation,
+  useStorage,
 } from '@liveblocks/react/suspense';
+import { nanoid } from 'nanoid';
 import { useCallback, useState } from 'react';
 import {
   Camera,
   CanvasMode,
   CanvasState,
+  Color,
+  LayerType,
+  Point,
 } from '@/types/canvas';
 import { CursorsPresence } from './cursors-presence';
 import { pointerEventToCanvasPoint } from '@/lib/utils';
+import { LiveObject } from '@liveblocks/client';
+
+const MAX_LAYERS = 100;
 
 interface CanvasProps {
   boardId: string;
 }
 
 export const Canvas = ({ boardId }: CanvasProps) => {
+  const layerIds = useStorage((root) => root.layerIds);
+
   const [canvasState, setCanvasState] =
     useState<CanvasState>({
       mode: CanvasMode.None,
@@ -34,11 +44,57 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     y: 0,
   });
 
+  const [lastUsedColor, setLastUsedColor] = useState<Color>(
+    {
+      r: 0,
+      g: 0,
+      b: 0,
+    },
+  );
+
   const info = useSelf((me) => me.info);
 
   const history = useHistory();
   const canUndo = useCanUndo();
   const canRedo = useCanRedo();
+
+  const insertLayer = useMutation(
+    (
+      { storage, setMyPresence },
+      layerType:
+        | LayerType.Ellipse
+        | LayerType.Rectangle
+        | LayerType.Text
+        | LayerType.Note,
+      position: Point,
+    ) => {
+      const liveLayers = storage.get('layers');
+      if (liveLayers.size >= MAX_LAYERS) {
+        return;
+      }
+
+      const liveLayerIds = storage.get('layerIds');
+      const layerId = nanoid();
+      const layer = new LiveObject({
+        type: layerType,
+        x: position.x,
+        y: position.y,
+        height: 100,
+        width: 100,
+        fill: lastUsedColor,
+      });
+
+      liveLayerIds.push(layerId);
+      liveLayers.set(layerId, layer);
+
+      setMyPresence(
+        { selection: [layerId] },
+        { addToHistory: true },
+      );
+      setCanvasState({ mode: CanvasMode.None });
+    },
+    [],
+  );
 
   const onWheel = useCallback((e: React.WheelEvent) => {
     setCamera((camera) => ({
@@ -83,7 +139,11 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
       >
-        <g>
+        <g
+          style={{
+            transform: `translate(${camera.x}px, ${camera.y}px)`,
+          }}
+        >
           <CursorsPresence />
         </g>
       </svg>
